@@ -37,7 +37,6 @@ func Test_SireneULReader(t *testing.T) {
 		result = append(result, sirene)
 	}
 	md5 := fmt.Sprintf("%x", structhash.Md5(result, 1))
-	fmt.Println(result)
 	expected := "873f2f701e68efd717523b99e99c4c7b"
 	if md5 != expected {
 		t.Logf("hash should be %s, is %s", expected, md5)
