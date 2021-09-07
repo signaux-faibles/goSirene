@@ -7,11 +7,16 @@ import (
 	"testing"
 
 	"github.com/cnf/structhash"
+	"github.com/davecgh/go-spew/spew"
 )
+
+var geoSireneFile = "test/StockEtablissement_utf8_geo.csv.gz"
+var sireneULFile = "test/StockUniteLegale_utf8.zip"
 
 func Test_GeoSireneReader(t *testing.T) {
 	t.Log("Test GeoSirene Reader with real data")
-	file, err := os.Open("test/etablissements_actifs.csv.gz")
+	file, err := os.Open(geoSireneFile)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,10 +24,16 @@ func Test_GeoSireneReader(t *testing.T) {
 	s := GeoSireneParser(ctx, file)
 	result := []GeoSirene{}
 	for sirene := range s {
-		result = append(result, sirene)
+		if sirene.err == nil {
+			result = append(result, sirene)
+		} else {
+			t.Log("Error encountered when reading data: " + sirene.err.Error())
+			t.Fatal()
+		}
 	}
+	spew.Dump(result)
 	md5 := fmt.Sprintf("%x", structhash.Md5(result, 1))
-	expected := "04c8544c21a6e5b28491c1cf37e21879"
+	expected := "c14c8ce14550c1d90af79e14a602acea"
 	if md5 != expected {
 		t.Logf("hash should be %s, is %s", expected, md5)
 		t.Fail()
@@ -31,13 +42,18 @@ func Test_GeoSireneReader(t *testing.T) {
 
 func Test_SireneULReader(t *testing.T) {
 	ctx := context.Background()
-	s := SireneULParser(ctx, "test/sireneUL.zip")
+	s := SireneULParser(ctx, sireneULFile)
 	result := []SireneUL{}
 	for sirene := range s {
-		result = append(result, sirene)
+		if sirene.err == nil {
+			result = append(result, sirene)
+		} else {
+			t.Log("Error encountered when reading data: " + sirene.err.Error())
+			t.Fatal()
+		}
 	}
 	md5 := fmt.Sprintf("%x", structhash.Md5(result, 1))
-	expected := "873f2f701e68efd717523b99e99c4c7b"
+	expected := "5efa2b5264247e1f5123f601055434e5"
 	if md5 != expected {
 		t.Logf("hash should be %s, is %s", expected, md5)
 		t.Fail()
@@ -45,23 +61,26 @@ func Test_SireneULReader(t *testing.T) {
 }
 func Test_GeoSireneReaderCancelContext(t *testing.T) {
 	t.Log("Test Reader with real data")
-	file, err := os.Open("test/etablissements_actifs.csv.gz")
+	file, err := os.Open(geoSireneFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
 	ctx, fn := context.WithCancel(ctx)
 	s := GeoSireneParser(ctx, file)
-	_, ok := <-s
+	v, ok := <-s
 	if !ok {
 		t.Log("Channel doesn't work")
-		t.Fail()
+	}
+	if v.err != nil {
+		t.Log("Error encountered when reading data: " + v.err.Error())
+		t.Fatal()
 	}
 	fn()
 	_, ok = <-s
 	if ok {
 		t.Log("Channel is open but should be closed")
-		t.Fail()
+		t.Fatal()
 	}
 }
 
@@ -70,16 +89,20 @@ func Test_SireneULReaderCancelContext(t *testing.T) {
 
 	ctx := context.Background()
 	ctx, fn := context.WithCancel(ctx)
-	s := SireneULParser(ctx, "test/sireneUL.zip")
-	_, ok := <-s
+	s := SireneULParser(ctx, sireneULFile)
+	v, ok := <-s
 	if !ok {
 		t.Log("Channel doesn't work")
-		t.Fail()
+		t.Fatal()
+	}
+	if v.err != nil {
+		t.Log("Error encountered when reading data: " + v.err.Error())
+		t.Fatal()
 	}
 	fn()
 	_, ok = <-s
 	if ok {
 		t.Log("Channel is open but should be closed")
-		t.Fail()
+		t.Fatal()
 	}
 }

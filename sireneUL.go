@@ -5,10 +5,13 @@ import (
 	"context"
 	"encoding/csv"
 	"io"
+	"strconv"
 	"strings"
+	"time"
 )
 
-var sireneULHeaders = strings.Split("siren dateFin dateDebut etatAdministratifUniteLegale changementEtatAdministratifUniteLegale nomUniteLegale changementNomUniteLegale nomUsageUniteLegale changementNomUsageUniteLegale denominationUniteLegale changementDenominationUniteLegale denominationUsuelle1UniteLegale denominationUsuelle2UniteLegale denominationUsuelle3UniteLegale changementDenominationUsuelleUniteLegale categorieJuridiqueUniteLegale changementCategorieJuridiqueUniteLegale activitePrincipaleUniteLegale nomenclatureActivitePrincipaleUniteLegale changementActivitePrincipaleUniteLegale nicSiegeUniteLegale changementNicSiegeUniteLegale economieSocialeSolidaireUniteLegale changementEconomieSocialeSolidaireUniteLegale caractereEmployeurUniteLegale changementCaractereEmployeurUniteLegale", " ")
+var SireneULHeaders = strings.Split("siren statutDiffusionUniteLegale unitePurgeeUniteLegale dateCreationUniteLegale sigleUniteLegale sexeUniteLegale prenom1UniteLegale prenom2UniteLegale prenom3UniteLegale prenom4UniteLegale prenomUsuelUniteLegale pseudonymeUniteLegale identifiantAssociationUniteLegale trancheEffectifsUniteLegale anneeEffectifsUniteLegale dateDernierTraitementUniteLegale nombrePeriodesUniteLegale categorieEntreprise anneeCategorieEntreprise dateDebut etatAdministratifUniteLegale nomUniteLegale nomUsageUniteLegale denominationUniteLegale denominationUsuelle1UniteLegale denominationUsuelle2UniteLegale denominationUsuelle3UniteLegale categorieJuridiqueUniteLegale activitePrincipaleUniteLegale nomenclatureActivitePrincipaleUniteLegale nicSiegeUniteLegale economieSocialeSolidaireUniteLegale caractereEmployeurUniteLegale", " ")
+var SireneULMap = mapHeaders(SireneULHeaders)
 
 // GeoSireneParses returns a GeoSirene channel.
 // Errors are transmitted trough GeoSirene.Error() function.
@@ -22,13 +25,6 @@ func sireneULFromCsv(row []string) SireneUL {
 	s := SireneUL{}
 	s.scan(row)
 	return s
-}
-
-func (s *SireneUL) scan(row []string) {
-	a := s.toArray()
-	for k, v := range row {
-		*a[k] = v
-	}
 }
 
 func readSireneUL(ctx context.Context, path string, s chan SireneUL) {
@@ -48,7 +44,7 @@ func readSireneUL(ctx context.Context, path string, s chan SireneUL) {
 			return
 		}
 		c := csv.NewReader(f)
-		if head, err := c.Read(); checkHeader(sireneULHeaders, head) && err != nil {
+		if head, err := c.Read(); checkHeader(SireneULHeaders, head) && err != nil {
 			s <- SireneUL{err: err}
 			return
 		}
@@ -81,63 +77,75 @@ func readSireneUL(ctx context.Context, path string, s chan SireneUL) {
 	}
 }
 
-type SireneUL struct {
-	err                                           error
-	Siren                                         string
-	DateFin                                       string
-	DateDebut                                     string
-	EtatAdministratifUniteLegale                  string
-	ChangementEtatAdministratifUniteLegale        string
-	NomUniteLegale                                string
-	ChangementNomUniteLegale                      string
-	NomUsageUniteLegale                           string
-	ChangementNomUsageUniteLegale                 string
-	DenominationUniteLegale                       string
-	ChangementDenominationUniteLegale             string
-	DenominationUsuelle1UniteLegale               string
-	DenominationUsuelle2UniteLegale               string
-	DenominationUsuelle3UniteLegale               string
-	ChangementDenominationUsuelleUniteLegale      string
-	CategorieJuridiqueUniteLegale                 string
-	ChangementCategorieJuridiqueUniteLegale       string
-	ActivitePrincipaleUniteLegale                 string
-	NomenclatureActivitePrincipaleUniteLegale     string
-	ChangementActivitePrincipaleUniteLegale       string
-	NicSiegeUniteLegale                           string
-	ChangementNicSiegeUniteLegale                 string
-	EconomieSocialeSolidaireUniteLegale           string
-	ChangementEconomieSocialeSolidaireUniteLegale string
-	CaractereEmployeurUniteLegale                 string
-	ChangementCaractereEmployeurUniteLegale       string
+func (s *SireneUL) scan(row []string) {
+	s.Siren = row[0]
+	s.StatutDiffusionUniteLegale = row[1] == "0"
+	s.UnitePurgeeUniteLegale = row[2] == "true"
+	s.DateCreationUniteLegale, _ = time.Parse("2006-01-02", row[3])
+	s.SigleUniteLegale = row[4]
+	s.SexeUniteLegale = row[5]
+	s.Prenom1UniteLegale = row[6]
+	s.Prenom2UniteLegale = row[7]
+	s.Prenom3UniteLegale = row[8]
+	s.Prenom4UniteLegale = row[9]
+	s.PrenomUsuelUniteLegale = row[10]
+	s.PseudonymeUniteLegale = row[11]
+	s.IdentifiantAssociationUniteLegale = row[12]
+	s.TrancheEffectifsUniteLegale = row[13]
+	s.AnneeEffectifsUniteLegale = row[14]
+	s.DateDernierTraitementUniteLegale, _ = time.Parse("2006-01-02", row[15])
+	s.NombrePeriodesUniteLegale, _ = strconv.Atoi(row[16])
+	s.CategorieEntreprise = row[17]
+	s.AnneeCategorieEntreprise = row[18]
+	s.DateDebut, _ = time.Parse("2006-01-02", row[19])
+	s.EtatAdministratifUniteLegale = row[20]
+	s.NomUniteLegale = row[21]
+	s.NomUsageUniteLegale = row[22]
+	s.DenominationUniteLegale = row[23]
+	s.DenominationUsuelle1UniteLegale = row[24]
+	s.DenominationUsuelle2UniteLegale = row[25]
+	s.DenominationUsuelle3UniteLegale = row[26]
+	s.CategorieJuridiqueUniteLegale = row[27]
+	s.ActivitePrincipaleUniteLegale = row[28]
+	s.NomenclatureActivitePrincipaleUniteLegale = row[29]
+	s.NicSiegeUniteLegale = row[30]
+	s.EconomieSocialeSolidaireUniteLegale = row[31] == "O"
+	s.CaractereEmployeurUniteLegale = row[32] == "O"
 }
 
-func (s *SireneUL) toArray() []*string {
-	return []*string{
-		&s.Siren,
-		&s.DateFin,
-		&s.DateDebut,
-		&s.EtatAdministratifUniteLegale,
-		&s.ChangementEtatAdministratifUniteLegale,
-		&s.NomUniteLegale,
-		&s.ChangementNomUniteLegale,
-		&s.NomUsageUniteLegale,
-		&s.ChangementNomUsageUniteLegale,
-		&s.DenominationUniteLegale,
-		&s.ChangementDenominationUniteLegale,
-		&s.DenominationUsuelle1UniteLegale,
-		&s.DenominationUsuelle2UniteLegale,
-		&s.DenominationUsuelle3UniteLegale,
-		&s.ChangementDenominationUsuelleUniteLegale,
-		&s.CategorieJuridiqueUniteLegale,
-		&s.ChangementCategorieJuridiqueUniteLegale,
-		&s.ActivitePrincipaleUniteLegale,
-		&s.NomenclatureActivitePrincipaleUniteLegale,
-		&s.ChangementActivitePrincipaleUniteLegale,
-		&s.NicSiegeUniteLegale,
-		&s.ChangementNicSiegeUniteLegale,
-		&s.EconomieSocialeSolidaireUniteLegale,
-		&s.ChangementEconomieSocialeSolidaireUniteLegale,
-		&s.CaractereEmployeurUniteLegale,
-		&s.ChangementCaractereEmployeurUniteLegale,
-	}
+type SireneUL struct {
+	err                                       error
+	Siren                                     string
+	StatutDiffusionUniteLegale                bool
+	UnitePurgeeUniteLegale                    bool
+	DateCreationUniteLegale                   time.Time
+	SigleUniteLegale                          string
+	SexeUniteLegale                           string
+	Prenom1UniteLegale                        string
+	Prenom2UniteLegale                        string
+	Prenom3UniteLegale                        string
+	Prenom4UniteLegale                        string
+	PrenomUsuelUniteLegale                    string
+	PseudonymeUniteLegale                     string
+	IdentifiantAssociationUniteLegale         string
+	TrancheEffectifsUniteLegale               string
+	AnneeEffectifsUniteLegale                 string
+	DateDernierTraitementUniteLegale          time.Time
+	NombrePeriodesUniteLegale                 int
+	CategorieEntreprise                       string
+	AnneeCategorieEntreprise                  string
+	DateDebut                                 time.Time
+	EtatAdministratifUniteLegale              string
+	NomUniteLegale                            string
+	NomUsageUniteLegale                       string
+	DenominationUniteLegale                   string
+	DenominationUsuelle1UniteLegale           string
+	DenominationUsuelle2UniteLegale           string
+	DenominationUsuelle3UniteLegale           string
+	CategorieJuridiqueUniteLegale             string
+	ActivitePrincipaleUniteLegale             string
+	NomenclatureActivitePrincipaleUniteLegale string
+	NicSiegeUniteLegale                       string
+	EconomieSocialeSolidaireUniteLegale       bool
+	CaractereEmployeurUniteLegale             bool
 }

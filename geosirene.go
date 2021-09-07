@@ -5,10 +5,13 @@ import (
 	"context"
 	"encoding/csv"
 	"io"
+	"strconv"
 	"strings"
+	"time"
 )
 
-var geoSireneHeaders = strings.Split("siren nic l1_normalisee l2_normalisee l3_normalisee l4_normalisee l5_normalisee l6_normalisee l7_normalisee l1_declaree l2_declaree l3_declareeee l4_declaree l5_declaree l6_declaree l7_declaree numvoie indrep typvoie libvoie codpos cedex rpet libreg depet arronet ctonet comet libcom du tu uu epci tcd zemet siege enseigne ind_publipo diffcom amintret natetab libnatetab apet700 libapet dapet tefet libtefet efetcent defet origine dcret ddebact activnat lieuact actisurf saisonat modet prodet prodpart auxilt nomen_long sigle nom prenom civilite rna nicsiege rpen depcomen adr_mail nj libnj apen700 libapen dapen aprm ess dateess tefen libtefen efencent defen categorie dcren amintren monoact moden proden esaann tca esaapen esasec1n esasec2n esasec3n esasec4n vmaj vmaj1 vmaj2 vmaj3 datemaj latitude longitude geo_score geo_type geo_adresse geo_id geo_ligne geo_l4 geo_l5", " ")
+var GeoSireneHeaders = strings.Split("siren nic siret statutDiffusionEtablissement dateCreationEtablissement trancheEffectifsEtablissement anneeEffectifsEtablissement activitePrincipaleRegistreMetiersEtablissement dateDernierTraitementEtablissement etablissementSiege nombrePeriodesEtablissement complementAdresseEtablissement numeroVoieEtablissement indiceRepetitionEtablissement typeVoieEtablissement libelleVoieEtablissement codePostalEtablissement libelleCommuneEtablissement libelleCommuneEtrangerEtablissement distributionSpecialeEtablissement codeCommuneEtablissement codeCedexEtablissement libelleCedexEtablissement codePaysEtrangerEtablissement libellePaysEtrangerEtablissement complementAdresse2Etablissement numeroVoie2Etablissement indiceRepetition2Etablissement typeVoie2Etablissement libelleVoie2Etablissement codePostal2Etablissement libelleCommune2Etablissement libelleCommuneEtranger2Etablissement distributionSpeciale2Etablissement codeCommune2Etablissement codeCedex2Etablissement libelleCedex2Etablissement codePaysEtranger2Etablissement libellePaysEtranger2Etablissement dateDebut etatAdministratifEtablissement enseigne1Etablissement enseigne2Etablissement enseigne3Etablissement denominationUsuelleEtablissement activitePrincipaleEtablissement nomenclatureActivitePrincipaleEtablissement caractereEmployeurEtablissement longitude latitude geo_score geo_type geo_adresse geo_id geo_ligne geo_l4 geo_l5", " ")
+var GeoSireneMap = mapHeaders(GeoSireneHeaders)
 
 func geoSireneFromCsv(row []string) GeoSirene {
 	s := GeoSirene{}
@@ -35,7 +38,7 @@ func readGeoSirene(ctx context.Context, r io.ReadCloser, s chan GeoSirene) {
 	defer r.Close()
 
 	c := csv.NewReader(gzr)
-	if head, err := c.Read(); checkHeader(geoSireneHeaders, head) && err != nil {
+	if head, err := c.Read(); checkHeader(GeoSireneHeaders, head) && err != nil {
 		s <- GeoSirene{err: err}
 		return
 	}
@@ -51,6 +54,7 @@ func readGeoSirene(ctx context.Context, r io.ReadCloser, s chan GeoSirene) {
 
 		sirene := geoSireneFromCsv(row)
 		if sirene.err != nil {
+			s <- sirene
 			return
 		}
 
@@ -64,116 +68,64 @@ func readGeoSirene(ctx context.Context, r io.ReadCloser, s chan GeoSirene) {
 }
 
 type GeoSirene struct {
-	err           error
-	Siren         string
-	Nic           string
-	L1_normalisee string
-	L2_normalisee string
-	L3_normalisee string
-	L4_normalisee string
-	L5_normalisee string
-	L6_normalisee string
-	L7_normalisee string
-	L1_declaree   string
-	L2_declaree   string
-	L3_declareeee string
-	L4_declaree   string
-	L5_declaree   string
-	L6_declaree   string
-	L7_declaree   string
-	Numvoie       string
-	Indrep        string
-	Typvoie       string
-	Libvoie       string
-	Codpos        string
-	Cedex         string
-	Rpet          string
-	Libreg        string
-	Depet         string
-	Arronet       string
-	Ctonet        string
-	Comet         string
-	Libcom        string
-	Du            string
-	Tu            string
-	Uu            string
-	Epci          string
-	Tcd           string
-	Zemet         string
-	Siege         string
-	Enseigne      string
-	Ind_publipo   string
-	Diffcom       string
-	Amintret      string
-	Natetab       string
-	Libnatetab    string
-	Apet700       string
-	Libapet       string
-	Dapet         string
-	Tefet         string
-	Libtefet      string
-	Efetcent      string
-	Defet         string
-	Origine       string
-	Dcret         string
-	Ddebact       string
-	Activnat      string
-	Lieuact       string
-	Actisurf      string
-	Saisonat      string
-	Modet         string
-	Prodet        string
-	Prodpart      string
-	Auxilt        string
-	Nomen_long    string
-	Sigle         string
-	Nom           string
-	Prenom        string
-	Civilite      string
-	Rna           string
-	Nicsiege      string
-	Rpen          string
-	Depcomen      string
-	Adr_mail      string
-	Nj            string
-	Libnj         string
-	Apen700       string
-	Libapen       string
-	Dapen         string
-	Aprm          string
-	Ess           string
-	Dateess       string
-	Tefen         string
-	Libtefen      string
-	Efencent      string
-	Defen         string
-	Categorie     string
-	Dcren         string
-	Amintren      string
-	Monoact       string
-	Moden         string
-	Proden        string
-	Esaann        string
-	Tca           string
-	Esaapen       string
-	Esasec1n      string
-	Esasec2n      string
-	Esasec3n      string
-	Esasec4n      string
-	Vmaj          string
-	Vmaj1         string
-	Vmaj2         string
-	Vmaj3         string
-	Datemaj       string
-	Latitude      string
-	Longitude     string
-	Geo_score     string
-	Geo_type      string
-	Geo_adresse   string
-	Geo_id        string
-	Geo_ligne     string
-	Geo_l4        string
-	Geo_l5        string
+	err                                            error
+	Siren                                          string
+	Nic                                            string
+	Siret                                          string
+	StatutDiffusionEtablissement                   string
+	DateCreationEtablissement                      time.Time
+	TrancheEffectifsEtablissement                  string
+	AnneeEffectifsEtablissement                    int
+	ActivitePrincipaleRegistreMetiersEtablissement string
+	DateDernierTraitementEtablissement             time.Time
+	EtablissementSiege                             bool
+	NombrePeriodesEtablissement                    int
+	ComplementAdresseEtablissement                 string
+	NumeroVoieEtablissement                        string
+	IndiceRepetitionEtablissement                  string
+	TypeVoieEtablissement                          string
+	LibelleVoieEtablissement                       string
+	CodePostalEtablissement                        string
+	LibelleCommuneEtablissement                    string
+	LibelleCommuneEtrangerEtablissement            string
+	DistributionSpecialeEtablissement              string
+	CodeCommuneEtablissement                       string
+	CodeCedexEtablissement                         string
+	LibelleCedexEtablissement                      string
+	CodePaysEtrangerEtablissement                  string
+	LibellePaysEtrangerEtablissement               string
+	ComplementAdresse2Etablissement                string
+	NumeroVoie2Etablissement                       string
+	IndiceRepetition2Etablissement                 string
+	TypeVoie2Etablissement                         string
+	LibelleVoie2Etablissement                      string
+	CodePostal2Etablissement                       string
+	LibelleCommune2Etablissement                   string
+	LibelleCommuneEtranger2Etablissement           string
+	DistributionSpeciale2Etablissement             string
+	CodeCommune2Etablissement                      string
+	CodeCedex2Etablissement                        string
+	LibelleCedex2Etablissement                     string
+	CodePaysEtranger2Etablissement                 string
+	LibellePaysEtranger2Etablissement              string
+	DateDebut                                      time.Time
+	EtatAdministratifEtablissement                 string
+	Enseigne1Etablissement                         string
+	Enseigne2Etablissement                         string
+	Enseigne3Etablissement                         string
+	DenominationUsuelleEtablissement               string
+	ActivitePrincipaleEtablissement                string
+	NomenclatureActivitePrincipaleEtablissement    string
+	CaractereEmployeurEtablissement                bool
+	Longitude                                      float64
+	Latitude                                       float64
+	Geo_score                                      float64
+	Geo_type                                       string
+	Geo_adresse                                    string
+	Geo_id                                         string
+	Geo_ligne                                      string
+	Geo_l4                                         string
+	Geo_l5                                         string
 }
 
 func (s GeoSirene) Error() error {
@@ -181,122 +133,61 @@ func (s GeoSirene) Error() error {
 }
 
 func (s *GeoSirene) scan(row []string) {
-	a := s.toArray()
-	for k, v := range row {
-		*a[k] = v
-	}
-}
-
-func (s *GeoSirene) toArray() []*string {
-	return []*string{
-		&s.Siren,
-		&s.Nic,
-		&s.L1_normalisee,
-		&s.L2_normalisee,
-		&s.L3_normalisee,
-		&s.L4_normalisee,
-		&s.L5_normalisee,
-		&s.L6_normalisee,
-		&s.L7_normalisee,
-		&s.L1_declaree,
-		&s.L2_declaree,
-		&s.L3_declareeee,
-		&s.L4_declaree,
-		&s.L5_declaree,
-		&s.L6_declaree,
-		&s.L7_declaree,
-		&s.Numvoie,
-		&s.Indrep,
-		&s.Typvoie,
-		&s.Libvoie,
-		&s.Codpos,
-		&s.Cedex,
-		&s.Rpet,
-		&s.Libreg,
-		&s.Depet,
-		&s.Arronet,
-		&s.Ctonet,
-		&s.Comet,
-		&s.Libcom,
-		&s.Du,
-		&s.Tu,
-		&s.Uu,
-		&s.Epci,
-		&s.Tcd,
-		&s.Zemet,
-		&s.Siege,
-		&s.Enseigne,
-		&s.Ind_publipo,
-		&s.Diffcom,
-		&s.Amintret,
-		&s.Natetab,
-		&s.Libnatetab,
-		&s.Apet700,
-		&s.Libapet,
-		&s.Dapet,
-		&s.Tefet,
-		&s.Libtefet,
-		&s.Efetcent,
-		&s.Defet,
-		&s.Origine,
-		&s.Dcret,
-		&s.Ddebact,
-		&s.Activnat,
-		&s.Lieuact,
-		&s.Actisurf,
-		&s.Saisonat,
-		&s.Modet,
-		&s.Prodet,
-		&s.Prodpart,
-		&s.Auxilt,
-		&s.Nomen_long,
-		&s.Sigle,
-		&s.Nom,
-		&s.Prenom,
-		&s.Civilite,
-		&s.Rna,
-		&s.Nicsiege,
-		&s.Rpen,
-		&s.Depcomen,
-		&s.Adr_mail,
-		&s.Nj,
-		&s.Libnj,
-		&s.Apen700,
-		&s.Libapen,
-		&s.Dapen,
-		&s.Aprm,
-		&s.Ess,
-		&s.Dateess,
-		&s.Tefen,
-		&s.Libtefen,
-		&s.Efencent,
-		&s.Defen,
-		&s.Categorie,
-		&s.Dcren,
-		&s.Amintren,
-		&s.Monoact,
-		&s.Moden,
-		&s.Proden,
-		&s.Esaann,
-		&s.Tca,
-		&s.Esaapen,
-		&s.Esasec1n,
-		&s.Esasec2n,
-		&s.Esasec3n,
-		&s.Esasec4n,
-		&s.Vmaj,
-		&s.Vmaj1,
-		&s.Vmaj2,
-		&s.Vmaj3,
-		&s.Datemaj,
-		&s.Latitude,
-		&s.Longitude,
-		&s.Geo_score,
-		&s.Geo_type,
-		&s.Geo_adresse,
-		&s.Geo_id,
-		&s.Geo_ligne,
-		&s.Geo_l4,
-		&s.Geo_l5,
-	}
+	s.Siren = row[0]
+	s.Nic = row[1]
+	s.Siret = row[2]
+	s.StatutDiffusionEtablissement = row[3]
+	s.DateCreationEtablissement, _ = time.Parse("2006-01-02", row[4])
+	s.TrancheEffectifsEtablissement = row[5]
+	s.AnneeEffectifsEtablissement, _ = strconv.Atoi(row[6])
+	s.ActivitePrincipaleRegistreMetiersEtablissement = row[7]
+	s.DateDernierTraitementEtablissement, _ = time.Parse("2006-01-02T15:04:05", row[8])
+	s.EtablissementSiege, _ = strconv.ParseBool(row[9])
+	s.NombrePeriodesEtablissement, _ = strconv.Atoi(row[10])
+	s.ComplementAdresseEtablissement = row[11]
+	s.NumeroVoieEtablissement = row[12]
+	s.IndiceRepetitionEtablissement = row[13]
+	s.TypeVoieEtablissement = row[14]
+	s.LibelleVoieEtablissement = row[15]
+	s.CodePostalEtablissement = row[16]
+	s.LibelleCommuneEtablissement = row[17]
+	s.LibelleCommuneEtrangerEtablissement = row[18]
+	s.DistributionSpecialeEtablissement = row[19]
+	s.CodeCommuneEtablissement = row[20]
+	s.CodeCedexEtablissement = row[21]
+	s.LibelleCedexEtablissement = row[22]
+	s.CodePaysEtrangerEtablissement = row[23]
+	s.LibellePaysEtrangerEtablissement = row[24]
+	s.ComplementAdresse2Etablissement = row[25]
+	s.NumeroVoie2Etablissement = row[26]
+	s.IndiceRepetition2Etablissement = row[27]
+	s.TypeVoie2Etablissement = row[28]
+	s.LibelleVoie2Etablissement = row[29]
+	s.CodePostal2Etablissement = row[30]
+	s.LibelleCommune2Etablissement = row[31]
+	s.LibelleCommuneEtranger2Etablissement = row[32]
+	s.DistributionSpeciale2Etablissement = row[33]
+	s.CodeCommune2Etablissement = row[34]
+	s.CodeCedex2Etablissement = row[35]
+	s.LibelleCedex2Etablissement = row[36]
+	s.CodePaysEtranger2Etablissement = row[37]
+	s.LibellePaysEtranger2Etablissement = row[38]
+	s.DateDebut, _ = time.Parse("2006-01-02", row[39])
+	s.EtatAdministratifEtablissement = row[40]
+	s.Enseigne1Etablissement = row[41]
+	s.Enseigne2Etablissement = row[42]
+	s.Enseigne3Etablissement = row[43]
+	s.DenominationUsuelleEtablissement = row[44]
+	s.ActivitePrincipaleEtablissement = row[45]
+	s.NomenclatureActivitePrincipaleEtablissement = row[46]
+	s.CaractereEmployeurEtablissement = row[47] == "O"
+	s.Longitude, _ = strconv.ParseFloat(row[48], 64)
+	s.Latitude, _ = strconv.ParseFloat(row[49], 64)
+	s.Geo_score, _ = strconv.ParseFloat(row[50], 64)
+	s.Geo_type = row[51]
+	s.Geo_adresse = row[52]
+	s.Geo_id = row[53]
+	s.Geo_ligne = row[54]
+	s.Geo_l4 = row[55]
+	s.Geo_l5 = row[56]
 }
