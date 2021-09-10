@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/cnf/structhash"
-	"github.com/davecgh/go-spew/spew"
 )
 
 var geoSireneFile = "test/StockEtablissement_utf8_geo.csv.gz"
@@ -31,7 +30,6 @@ func Test_GeoSireneReader(t *testing.T) {
 			t.Fatal()
 		}
 	}
-	spew.Dump(result)
 	md5 := fmt.Sprintf("%x", structhash.Md5(result, 1))
 	expected := "c14c8ce14550c1d90af79e14a602acea"
 	if md5 != expected {
