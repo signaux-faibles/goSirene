@@ -149,3 +149,42 @@ type SireneUL struct {
 	EconomieSocialeSolidaireUniteLegale       bool
 	CaractereEmployeurUniteLegale             bool
 }
+
+// ToArray produces SireneUL data in []interface{} manner
+func (s SireneUL) ToArray() []interface{} {
+	return []interface{}{
+		s.Siren,
+		s.StatutDiffusionUniteLegale,
+		s.UnitePurgeeUniteLegale,
+		s.DateCreationUniteLegale,
+		s.SigleUniteLegale,
+		s.SexeUniteLegale,
+		s.Prenom1UniteLegale,
+		s.Prenom2UniteLegale,
+		s.Prenom3UniteLegale,
+		s.Prenom4UniteLegale,
+		s.PrenomUsuelUniteLegale,
+		s.PseudonymeUniteLegale,
+		s.IdentifiantAssociationUniteLegale,
+		s.TrancheEffectifsUniteLegale,
+		s.AnneeEffectifsUniteLegale,
+		s.DateDernierTraitementUniteLegale,
+		s.NombrePeriodesUniteLegale,
+		s.CategorieEntreprise,
+		s.AnneeCategorieEntreprise,
+		s.DateDebut,
+		s.EtatAdministratifUniteLegale,
+		s.NomUniteLegale,
+		s.NomUsageUniteLegale,
+		s.DenominationUniteLegale,
+		s.DenominationUsuelle1UniteLegale,
+		s.DenominationUsuelle2UniteLegale,
+		s.DenominationUsuelle3UniteLegale,
+		s.CategorieJuridiqueUniteLegale,
+		s.ActivitePrincipaleUniteLegale,
+		s.NomenclatureActivitePrincipaleUniteLegale,
+		s.NicSiegeUniteLegale,
+		s.EconomieSocialeSolidaireUniteLegale,
+		s.CaractereEmployeurUniteLegale,
+	}
+}
