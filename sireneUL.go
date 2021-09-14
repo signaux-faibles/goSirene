@@ -166,5 +166,4 @@ func (s SireneUL) RaisonSociale() string {
 			s.Prenom3UniteLegale+" "+
 			s.Prenom4UniteLegale+" ",
 			" ") + "/"
-
 }
