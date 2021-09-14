@@ -150,41 +150,20 @@ type SireneUL struct {
 	CaractereEmployeurUniteLegale             bool
 }
 
-// ToArray produces SireneUL data in []interface{} manner
-func (s SireneUL) ToArray() []interface{} {
-	return []interface{}{
-		s.Siren,
-		s.StatutDiffusionUniteLegale,
-		s.UnitePurgeeUniteLegale,
-		s.DateCreationUniteLegale,
-		s.SigleUniteLegale,
-		s.SexeUniteLegale,
-		s.Prenom1UniteLegale,
-		s.Prenom2UniteLegale,
-		s.Prenom3UniteLegale,
-		s.Prenom4UniteLegale,
-		s.PrenomUsuelUniteLegale,
-		s.PseudonymeUniteLegale,
-		s.IdentifiantAssociationUniteLegale,
-		s.TrancheEffectifsUniteLegale,
-		s.AnneeEffectifsUniteLegale,
-		s.DateDernierTraitementUniteLegale,
-		s.NombrePeriodesUniteLegale,
-		s.CategorieEntreprise,
-		s.AnneeCategorieEntreprise,
-		s.DateDebut,
-		s.EtatAdministratifUniteLegale,
-		s.NomUniteLegale,
-		s.NomUsageUniteLegale,
-		s.DenominationUniteLegale,
-		s.DenominationUsuelle1UniteLegale,
-		s.DenominationUsuelle2UniteLegale,
-		s.DenominationUsuelle3UniteLegale,
-		s.CategorieJuridiqueUniteLegale,
-		s.ActivitePrincipaleUniteLegale,
-		s.NomenclatureActivitePrincipaleUniteLegale,
-		s.NicSiegeUniteLegale,
-		s.EconomieSocialeSolidaireUniteLegale,
-		s.CaractereEmployeurUniteLegale,
+// RaisonSociale produit la Raison Sociale à partir des champs de l'unité légale
+func (s SireneUL) RaisonSociale() string {
+	var nomUsageUniteLegale string
+
+	if s.NomUsageUniteLegale != "" {
+		nomUsageUniteLegale = s.NomUsageUniteLegale + "/"
 	}
+
+	return s.DenominationUniteLegale +
+		strings.Trim(s.NomUniteLegale+"*"+
+			nomUsageUniteLegale+
+			s.Prenom1UniteLegale+" "+
+			s.Prenom2UniteLegale+" "+
+			s.Prenom3UniteLegale+" "+
+			s.Prenom4UniteLegale+" ",
+			" ") + "/"
 }
