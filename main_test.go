@@ -31,7 +31,7 @@ func Test_GeoSireneReader(t *testing.T) {
 		}
 	}
 	md5 := fmt.Sprintf("%x", structhash.Md5(result, 1))
-	expected := "c14c8ce14550c1d90af79e14a602acea"
+	expected := "6f1ac5ec70776c9607702bfb70f1d2c9"
 	if md5 != expected {
 		t.Logf("hash should be %s, is %s", expected, md5)
 		t.Fail()
