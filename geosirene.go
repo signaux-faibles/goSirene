@@ -75,7 +75,7 @@ type GeoSirene struct {
 	StatutDiffusionEtablissement                   string
 	DateCreationEtablissement                      time.Time
 	TrancheEffectifsEtablissement                  string
-	AnneeEffectifsEtablissement                    int
+	AnneeEffectifsEtablissement                    string
 	ActivitePrincipaleRegistreMetiersEtablissement string
 	DateDernierTraitementEtablissement             time.Time
 	EtablissementSiege                             bool
@@ -139,7 +139,7 @@ func (s *GeoSirene) scan(row []string) {
 	s.StatutDiffusionEtablissement = row[3]
 	s.DateCreationEtablissement, _ = time.Parse("2006-01-02", row[4])
 	s.TrancheEffectifsEtablissement = row[5]
-	s.AnneeEffectifsEtablissement, _ = strconv.Atoi(row[6])
+	s.AnneeEffectifsEtablissement = row[6]
 	s.ActivitePrincipaleRegistreMetiersEtablissement = row[7]
 	s.DateDernierTraitementEtablissement, _ = time.Parse("2006-01-02T15:04:05", row[8])
 	s.EtablissementSiege, _ = strconv.ParseBool(row[9])
