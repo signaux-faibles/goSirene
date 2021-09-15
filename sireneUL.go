@@ -171,3 +171,13 @@ func (s SireneUL) RaisonSociale() string {
 func (s SireneUL) Error() error {
 	return s.err
 }
+
+func (s GeoSirene) CodeDepartement() string {
+	if len(s.CodeCommuneEtablissement) < 5 {
+		return ""
+	}
+	if s.CodeCommuneEtablissement[0:2] == "97" {
+		return s.CodeCommuneEtablissement[0:3]
+	}
+	return s.CodeCommuneEtablissement[0:2]
+}
