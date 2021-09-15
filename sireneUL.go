@@ -167,3 +167,7 @@ func (s SireneUL) RaisonSociale() string {
 			s.Prenom4UniteLegale+" ",
 			" ") + "/"
 }
+
+func (s SireneUL) Error() error {
+	return s.err
+}
