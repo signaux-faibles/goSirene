@@ -158,14 +158,24 @@ func (s SireneUL) RaisonSociale() string {
 		nomUsageUniteLegale = s.NomUsageUniteLegale + "/"
 	}
 
-	return s.DenominationUniteLegale +
-		strings.Trim(s.NomUniteLegale+"*"+
+	if s.DenominationUniteLegale != "" {
+		return s.DenominationUniteLegale
+	} else {
+		return strings.Trim(s.NomUniteLegale+"*"+
 			nomUsageUniteLegale+
-			s.Prenom1UniteLegale+" "+
-			s.Prenom2UniteLegale+" "+
-			s.Prenom3UniteLegale+" "+
-			s.Prenom4UniteLegale+" ",
+			coalesce(s.Prenom1UniteLegale, " ")+
+			coalesce(s.Prenom2UniteLegale, " ")+
+			coalesce(s.Prenom3UniteLegale, " ")+
+			coalesce(s.Prenom4UniteLegale, " "),
 			" ") + "/"
+	}
+}
+
+func coalesce(s string, c string) string {
+	if s == "" {
+		return c
+	}
+	return s
 }
 
 func (s SireneUL) Error() error {
