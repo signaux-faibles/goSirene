@@ -4,7 +4,9 @@ import (
 	"archive/zip"
 	"context"
 	"encoding/csv"
+	"errors"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +19,13 @@ var SireneULMap = mapHeaders(SireneULHeaders)
 // Errors are transmitted trough GeoSirene.Error() function.
 func SireneULParser(ctx context.Context, path string) chan SireneUL {
 	s := make(chan SireneUL)
-	go readSireneUL(ctx, path, s)
+	if strings.HasSuffix(path, "csv") {
+		go readPlainSireneUL(ctx, path, s)
+	} else if strings.HasSuffix(path, "zip") {
+		go readZipSireneUL(ctx, path, s)
+	} else {
+		s <- SireneUL{err: errors.New("prodived path must end with `csv` or `zip`")}
+	}
 	return s
 }
 
@@ -27,7 +35,51 @@ func sireneULFromCsv(row []string) SireneUL {
 	return s
 }
 
-func readSireneUL(ctx context.Context, path string, s chan SireneUL) {
+func parseSireneUL(ctx context.Context, file io.ReadCloser, s chan SireneUL) {
+	c := csv.NewReader(file)
+	if head, err := c.Read(); checkHeader(SireneULHeaders, head) && err != nil {
+		s <- SireneUL{err: err}
+		return
+	}
+	for {
+		row, err := c.Read()
+		if err != nil {
+			if err == io.EOF {
+				err := file.Close()
+				if err != nil {
+					s <- SireneUL{err: err}
+				}
+				return
+			}
+			file.Close()
+			s <- SireneUL{err: err}
+			return
+		}
+		sirene := sireneULFromCsv(row)
+		if sirene.err != nil {
+			return
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case s <- sirene:
+			continue
+		}
+	}
+}
+
+func readPlainSireneUL(ctx context.Context, path string, s chan SireneUL) {
+	defer close(s)
+	f, err := os.Open(path)
+	if err != nil {
+		s <- SireneUL{err: err}
+		return
+	}
+	parseSireneUL(ctx, f, s)
+}
+
+func readZipSireneUL(ctx context.Context, path string, s chan SireneUL) {
 	zr, err := zip.OpenReader(path)
 	if err != nil {
 		s <- SireneUL{err: err}
@@ -43,37 +95,7 @@ func readSireneUL(ctx context.Context, path string, s chan SireneUL) {
 			s <- SireneUL{err: err}
 			return
 		}
-		c := csv.NewReader(f)
-		if head, err := c.Read(); checkHeader(SireneULHeaders, head) && err != nil {
-			s <- SireneUL{err: err}
-			return
-		}
-		for {
-			row, err := c.Read()
-			if err != nil {
-				if err == io.EOF {
-					err := f.Close()
-					if err != nil {
-						s <- SireneUL{err: err}
-					}
-					return
-				}
-				f.Close()
-				s <- SireneUL{err: err}
-				return
-			}
-			sirene := sireneULFromCsv(row)
-			if sirene.err != nil {
-				return
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case s <- sirene:
-				continue
-			}
-		}
+		parseSireneUL(ctx, f, s)
 	}
 }
 
