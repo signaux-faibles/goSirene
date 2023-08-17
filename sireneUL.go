@@ -13,7 +13,6 @@ import (
 )
 
 var SireneULHeaders = strings.Split("siren statutDiffusionUniteLegale unitePurgeeUniteLegale dateCreationUniteLegale sigleUniteLegale sexeUniteLegale prenom1UniteLegale prenom2UniteLegale prenom3UniteLegale prenom4UniteLegale prenomUsuelUniteLegale pseudonymeUniteLegale identifiantAssociationUniteLegale trancheEffectifsUniteLegale anneeEffectifsUniteLegale dateDernierTraitementUniteLegale nombrePeriodesUniteLegale categorieEntreprise anneeCategorieEntreprise dateDebut etatAdministratifUniteLegale nomUniteLegale nomUsageUniteLegale denominationUniteLegale denominationUsuelle1UniteLegale denominationUsuelle2UniteLegale denominationUsuelle3UniteLegale categorieJuridiqueUniteLegale activitePrincipaleUniteLegale nomenclatureActivitePrincipaleUniteLegale nicSiegeUniteLegale economieSocialeSolidaireUniteLegale caractereEmployeurUniteLegale", " ")
-var SireneULMap = mapHeaders(SireneULHeaders)
 
 // GeoSireneParses returns a GeoSirene channel.
 // Errors are transmitted trough GeoSirene.Error() function.
@@ -37,6 +36,8 @@ func sireneULFromCsv(row []string) SireneUL {
 
 func parseSireneUL(ctx context.Context, file io.ReadCloser, s chan SireneUL) {
 	c := csv.NewReader(file)
+	defer file.Close()
+
 	if head, err := c.Read(); checkHeader(SireneULHeaders, head) && err != nil {
 		s <- SireneUL{err: err}
 		return
@@ -45,13 +46,11 @@ func parseSireneUL(ctx context.Context, file io.ReadCloser, s chan SireneUL) {
 		row, err := c.Read()
 		if err != nil {
 			if err == io.EOF {
-				err := file.Close()
 				if err != nil {
 					s <- SireneUL{err: err}
 				}
 				return
 			}
-			file.Close()
 			s <- SireneUL{err: err}
 			return
 		}
@@ -64,7 +63,6 @@ func parseSireneUL(ctx context.Context, file io.ReadCloser, s chan SireneUL) {
 		case <-ctx.Done():
 			return
 		case s <- sirene:
-			continue
 		}
 	}
 }
@@ -80,13 +78,12 @@ func readPlainSireneUL(ctx context.Context, path string, s chan SireneUL) {
 }
 
 func readZipSireneUL(ctx context.Context, path string, s chan SireneUL) {
+	defer close(s)
 	zr, err := zip.OpenReader(path)
 	if err != nil {
 		s <- SireneUL{err: err}
 		return
 	}
-
-	defer close(s)
 	defer zr.Close()
 
 	for _, zf := range zr.File {
