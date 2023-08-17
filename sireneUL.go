@@ -36,6 +36,7 @@ func sireneULFromCsv(row []string) SireneUL {
 
 func parseSireneUL(ctx context.Context, file io.ReadCloser, s chan SireneUL) {
 	c := csv.NewReader(file)
+	defer file.Close()
 
 	if head, err := c.Read(); checkHeader(SireneULHeaders, head) && err != nil {
 		s <- SireneUL{err: err}
@@ -45,7 +46,6 @@ func parseSireneUL(ctx context.Context, file io.ReadCloser, s chan SireneUL) {
 		row, err := c.Read()
 		if err != nil {
 			if err == io.EOF {
-				err := file.Close()
 				if err != nil {
 					s <- SireneUL{err: err}
 				}
