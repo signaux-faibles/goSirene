@@ -29,13 +29,13 @@ func GeoSireneParser(ctx context.Context, r io.ReadCloser) chan GeoSirene {
 
 func readGeoSirene(ctx context.Context, r io.ReadCloser, s chan GeoSirene) {
 	gzr, err := gzip.NewReader(r)
+	defer close(s)
+	defer r.Close()
 	if err != nil {
 		s <- GeoSirene{err: err}
+		return
 	}
-
-	defer close(s)
 	defer gzr.Close()
-	defer r.Close()
 
 	c := csv.NewReader(gzr)
 	if head, err := c.Read(); checkHeader(GeoSireneHeaders, head) && err != nil {
